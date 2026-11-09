@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Заказ продуктов</title>
+<style>
+  :root {
+    --bg: #eef4ec;
+    --surface: #ffffff;
+    --ink: #1d2b22;
+    --muted: #66766b;
+    --line: #d5e0d3;
+    --accent: #2e7d4f;
+    --accent-dark: #226240;
+    --accent-soft: #e2efe3;
+    --error: #c0392b;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom));
+  }
+  main { max-width: 520px; margin: 0 auto; }
+  header { padding: 8px 4px 20px; }
+  h1 { margin: 0 0 6px; font-size: 1.7rem; line-height: 1.15; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--muted); }
+  form {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 20px 18px 22px;
+    box-shadow: 0 10px 30px rgba(46, 125, 79, 0.08);
+  }
+  .field { margin-bottom: 16px; }
+  label { display: block; font-weight: 600; font-size: .92rem; margin-bottom: 6px; }
+  label small { font-weight: 400; color: var(--muted); }
+  input, select, textarea {
+    width: 100%;
+    font: inherit;
+    color: var(--ink);
+    background: #fafcf9;
+    border: 1.5px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+    appearance: none;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%2366766b' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 38px;
+  }
+  textarea { resize: vertical; min-height: 110px; }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    background: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .field.invalid input, .field.invalid select, .field.invalid textarea { border-color: var(--error); }
+  .err { display: none; color: var(--error); font-size: .84rem; margin-top: 5px; }
+  .field.invalid .err { display: block; }
+  #timeWrap { display: none; margin-top: 10px; }
+  #timeWrap.show { display: block; }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+  button.submit {
+    width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    font: inherit; font-weight: 700; font-size: 1.05rem;
+    color: #fff; background: var(--accent);
+    border: 0; border-radius: var(--radius);
+    padding: 15px 18px; margin-top: 6px;
+    cursor: pointer;
+    transition: background .15s, transform .1s;
+  }
+  button.submit:hover { background: var(--accent-dark); }
+  button.submit:active { transform: scale(.985); }
+  button.submit:disabled { background: #8fb9a0; cursor: not-allowed; }
+  .spinner {
+    display: none; width: 18px; height: 18px;
+    border: 2.5px solid rgba(255,255,255,.4); border-top-color: #fff;
+    border-radius: 50%; animation: spin .7s linear infinite;
+  }
+  button.loading .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .form-error {
+    display: none; margin-top: 14px; padding: 12px 14px;
+    background: #fdecea; color: var(--error);
+    border-radius: var(--radius); font-size: .92rem;
+  }
+  .form-error.show { display: block; }
+
+  dialog {
+    border: 0; border-radius: 22px; padding: 30px 24px 24px;
+    width: min(380px, calc(100vw - 32px)); text-align: center;
+    color: var(--ink); background: var(--surface);
+    box-shadow: 0 20px 60px rgba(20, 40, 28, .3);
+  }
+  dialog::backdrop { background: rgba(29, 43, 34, .45); }
+  dialog[open] { animation: pop .28s cubic-bezier(.2,.9,.3,1.2); }
+  @keyframes pop { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
+  .check {
+    width: 64px; height: 64px; margin: 0 auto 14px;
+    background: var(--accent-soft); border-radius: 50%;
+    display: grid; place-items: center;
+  }
+  .check svg { width: 30px; height: 30px; stroke: var(--accent); fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  dialog h2 { margin: 0 0 8px; font-size: 1.35rem; }
+  dialog p { margin: 0 0 20px; color: var(--muted); }
+  dialog button {
+    font: inherit; font-weight: 700; color: var(--accent-dark);
+    background: var(--accent-soft); border: 0; border-radius: var(--radius);
+    padding: 12px 28px; cursor: pointer; width: 100%;
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Закажите продукты на дом</h1>
+    <p>Заполните форму — мы перезвоним и подтвердим заказ.</p>
+  </header>
+
+  <form id="orderForm" novalidate autocomplete="on">
+    <div class="field">
+      <label for="name">Ваше имя</label>
+      <input id="name" name="name" type="text" autocomplete="name" maxlength="80" required>
+      <div class="err">Укажите имя</div>
+    </div>
+
+    <div class="field">
+      <label for="phone">Телефон</label>
+      <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="+7 (___) ___-__-__" maxlength="18" required>
+      <div class="err">Введите номер в формате +7 (XXX) XXX-XX-XX</div>
+    </div>
+
+    <div class="field">
+      <label for="address">Адрес доставки</label>
+      <input id="address" name="address" type="text" autocomplete="street-address" maxlength="250" placeholder="Улица, дом, квартира, подъезд" required>
+      <div class="err">Укажите адрес: улица, дом, квартира</div>
+    </div>
+
+    <div class="field">
+      <label for="deliveryType">Когда доставить</label>
+      <select id="deliveryType" name="deliveryType">
+        <option value="asap">Как можно скорее</option>
+        <option value="scheduled">К определённому времени</option>
+      </select>
+      <div id="timeWrap">
+        <input id="deliveryTime" name="deliveryTime" type="text" maxlength="60" placeholder="Например: сегодня к 18:30" aria-label="Время доставки">
+      </div>
+      <div class="err" id="timeErr">Укажите желаемое время</div>
+    </div>
+
+    <div class="field">
+      <label for="items">Что заказать</label>
+      <textarea id="items" name="items" maxlength="2000" placeholder="Например: Картофель — 3 кг, Томаты — 1 кг, Укроп — 1 пучок" required></textarea>
+      <div class="err">Напишите, какие товары вам нужны</div>
+    </div>
+
+    <div class="field">
+      <label for="comment">Комментарий <small>(необязательно)</small></label>
+      <textarea id="comment" name="comment" maxlength="1000" style="min-height:72px" placeholder="Домофон не работает, позвоните за 10 минут"></textarea>
+    </div>
+
+    <input class="hp" type="text" name="website" id="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+    <button type="submit" class="submit" id="submitBtn">
+      <span class="spinner" aria-hidden="true"></span>
+      <span class="label">Отправить заказ</span>
+    </button>
+    <div class="form-error" id="formError" role="alert"></div>
+  </form>
+</main>
+
+<dialog id="successModal">
+  <div class="check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+  <h2>Ваш заказ принят!</h2>
+  <p>Мы свяжемся с вами для подтверждения.</p>
+  <button type="button" id="closeModal">Хорошо</button>
+</dialog>
+
+<script>
+(() => {
+  const API_URL = "/api/order"; // если фронтенд на другом домене — укажите полный URL сервера
+  const $ = (id) => document.getElementById(id);
+  const form = $("orderForm"), btn = $("submitBtn"), modal = $("successModal");
+  const phone = $("phone"), type = $("deliveryType"), time = $("deliveryTime");
+  let sending = false;
+
+  // --- Маска телефона: +7 (XXX) XXX-XX-XX ---
+  function formatPhone(raw) {
+    let d = raw.replace(/\D/g, "");
+    if (d.startsWith("8") || d.startsWith("7")) d = d.slice(1);
+    d = d.slice(0, 10);
+    let out = "+7";
+    if (d.length) out += " (" + d.slice(0, 3);
+    if (d.length >= 3) out += ")";
+    if (d.length > 3) out += " " + d.slice(3, 6);
+    if (d.length > 6) out += "-" + d.slice(6, 8);
+    if (d.length > 8) out += "-" + d.slice(8, 10);
+    return out;
+  }
+  phone.addEventListener("input", (e) => {
+    if (e.inputType && e.inputType.startsWith("delete")) {
+      if (phone.value.replace(/\D/g, "").length <= 1) phone.value = "";
+      return;
+    }
+    phone.value = formatPhone(phone.value);
+  });
+  phone.addEventListener("focus", () => { if (!phone.value) phone.value = "+7 ("; });
+  phone.addEventListener("blur", () => { if (phone.value.replace(/\D/g, "").length <= 1) phone.value = ""; });
+
+  // --- Время доставки ---
+  type.addEventListener("change", () => {
+    $("timeWrap").classList.toggle("show", type.value === "scheduled");
+    if (type.value === "scheduled") time.focus();
+  });
+  const deliveryText = () => type.value === "asap" ? "Как можно скорее" : "К времени: " + time.value.trim();
+
+  // --- Валидация ---
+  function setInvalid(el, bad) { el.closest(".field").classList.toggle("invalid", bad); return bad; }
+  function validate() {
+    const phoneOk = /^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/.test(phone.value);
+    const checks = [
+      setInvalid($("name"), !$("name").value.trim()),
+      setInvalid(phone, !phoneOk),
+      setInvalid($("address"), $("address").value.trim().length < 5),
+      setInvalid(type, type.value === "scheduled" && !time.value.trim()),
+      setInvalid($("items"), !$("items").value.trim()),
+    ];
+    return !checks.some(Boolean);
+  }
+  form.querySelectorAll("input, textarea, select").forEach((el) =>
+    el.addEventListener("input", () => el.closest(".field")?.classList.remove("invalid"))
+  );
+  // Ошибка времени показывается внутри того же .field, что и select
+  type.closest(".field").querySelector("#timeErr").style.display = "none";
+  const syncTimeErr = () => {
+    const f = type.closest(".field");
+    $("timeErr").style.display = f.classList.contains("invalid") ? "block" : "none";
+  };
+
+  function setLoading(on) {
+    sending = on;
+    btn.disabled = on;
+    btn.classList.toggle("loading", on);
+    btn.querySelector(".label").textContent = on ? "Отправляем…" : "Отправить заказ";
+  }
+  function showError(msg) {
+    const box = $("formError");
+    box.textContent = msg || "";
+    box.classList.toggle("show", !!msg);
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (sending) return;
+    showError("");
+    const ok = validate();
+    syncTimeErr();
+    if (!ok) { form.querySelector(".invalid input, .invalid select, .invalid textarea")?.focus(); return; }
+
+    setLoading(true);
+    try {
+      const res = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: $("name").value.trim(),
+          phone: phone.value,
+          address: $("address").value.trim(),
+          delivery_time: deliveryText(),
+          items: $("items").value.trim(),
+          comment: $("comment").value.trim(),
+          website: $("website").value,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) {
+        if (data.errors) {
+          const map = { name: "name", phone: "phone", address: "address", items: "items", delivery_time: "deliveryType" };
+          Object.keys(data.errors).forEach((k) => map[k] && setInvalid($(map[k]), true));
+        }
+        throw new Error(data.error || "Проверьте заполнение формы и попробуйте ещё раз.");
+      }
+      form.reset();
+      $("timeWrap").classList.remove("show");
+      modal.showModal();
+    } catch (err) {
+      showError(err instanceof TypeError ? "Нет связи с сервером. Проверьте интернет и повторите." : err.message);
+    } finally {
+      setLoading(false);
+    }
+  });
+
+  $("closeModal").addEventListener("click", () => modal.close());
+  modal.addEventListener("click", (e) => { if (e.target === modal) modal.close(); });
+})();
+</script>
+</body>
+</html>
