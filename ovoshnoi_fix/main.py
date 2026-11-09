@@ -11,8 +11,8 @@ from aiohttp import web
 BASE_DIR = Path(__file__).parent
 STATIC_DIR = BASE_DIR / "static"
 
-BOT_TOKEN = os.getenv("9048234771:AAH-vLmVl-MM4B80DTBPLeHRKTbVT39GxTo", "")
-ADMIN_CHAT_ID = os.getenv("8447519329", "")
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID", "")
 # Для CORS: "*" или список через запятую, например "https://myshop.ru,https://www.myshop.ru"
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 
