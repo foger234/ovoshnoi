@@ -17,7 +17,7 @@ ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID", "")
 ALLOWED_ORIGINS = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "*").split(",") if o.strip()]
 
 PHONE_RE = re.compile(r"^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$")
-LIMITS = {"name": 80, "phone": 20, "address": 250, "delivery_time": 60, "items": 2000, "comment": 1000}
+LIMITS = {"name": 80, "phone": 20, "address": 250, "delivery_time": 60, "payment": 50, "items": 2000, "comment": 1000}
 RATE_LIMIT = 5          # заказов
 RATE_WINDOW = 600       # за 10 минут с одного IP
 _hits: dict[str, list[float]] = {}
@@ -63,7 +63,7 @@ def validate(data: dict) -> tuple[dict, dict]:
     """Возвращает (чистые данные, ошибки по полям)."""
     clean = {k: str(data.get(k, "")).strip() for k in LIMITS}
     errors = {}
-    for field in ("name", "phone", "address", "delivery_time", "items"):
+    for field in ("name", "phone", "address", "delivery_time", "payment", "items"):
         if not clean[field]:
             errors[field] = "Заполните это поле"
     if "phone" not in errors and not PHONE_RE.match(clean["phone"]):
@@ -81,7 +81,8 @@ def build_message(o: dict) -> str:
         f"👤 <b>Имя:</b> {e(o['name'])}\n"
         f"📞 <b>Телефон:</b> {e(o['phone'])}\n"
         f"📍 <b>Адрес:</b> {e(o['address'])}\n"
-        f"🕒 <b>Время:</b> {e(o['delivery_time'])}\n\n"
+        f"🕒 <b>Время:</b> {e(o['delivery_time'])}\n"
+        f"💳 <b>Оплата:</b> {e(o['payment'])}\n\n"
         f"📝 <b>Состав заказа:</b>\n{e(o['items'])}\n\n"
         f"💬 <b>Комментарий:</b> {e(o['comment']) or 'Нет'}"
     )
