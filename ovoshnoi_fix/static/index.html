@@ -163,6 +163,15 @@
     </div>
 
     <div class="field">
+      <label for="payment">Способ оплаты</label>
+      <select id="payment" name="payment">
+        <option value="Наличные">Наличные</option>
+        <option value="Безналичная оплата">Безналичная оплата</option>
+      </select>
+      <div class="err">Выберите способ оплаты</div>
+    </div>
+
+    <div class="field">
       <label for="items">Что заказать</label>
       <textarea id="items" name="items" maxlength="2000" placeholder="Например: Картофель — 3 кг, Томаты — 1 кг, Укроп — 1 пучок" required></textarea>
       <div class="err">Напишите, какие товары вам нужны</div>
@@ -237,6 +246,7 @@
       setInvalid(phone, !phoneOk),
       setInvalid($("address"), $("address").value.trim().length < 5),
       setInvalid(type, type.value === "scheduled" && !time.value.trim()),
+      setInvalid($("payment"), !$("payment").value.trim()),
       setInvalid($("items"), !$("items").value.trim()),
     ];
     return !checks.some(Boolean);
@@ -281,6 +291,7 @@
           phone: phone.value,
           address: $("address").value.trim(),
           delivery_time: deliveryText(),
+          payment: $("payment").value,
           items: $("items").value.trim(),
           comment: $("comment").value.trim(),
           website: $("website").value,
@@ -289,7 +300,7 @@
       const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.ok) {
         if (data.errors) {
-          const map = { name: "name", phone: "phone", address: "address", items: "items", delivery_time: "deliveryType" };
+          const map = { name: "name", phone: "phone", address: "address", items: "items", delivery_time: "deliveryType", payment: "payment" };
           Object.keys(data.errors).forEach((k) => map[k] && setInvalid($(map[k]), true));
         }
         throw new Error(data.error || "Проверьте заполнение формы и попробуйте ещё раз.");
